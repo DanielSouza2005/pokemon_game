@@ -10,7 +10,7 @@ class Sprite {
         }
 
         this.moving = false; 
-        this.sprites = sprites;       
+        this.sprites = sprites;         
     }
 
     draw(){

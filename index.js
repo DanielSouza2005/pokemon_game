@@ -183,4 +183,5 @@ function returnOverlappingArea(player, battleZone){
             ));
 }
 
-mapGeneral.animate();
+// mapGeneral.animate();
+mapGeneral.battle.startBattle();

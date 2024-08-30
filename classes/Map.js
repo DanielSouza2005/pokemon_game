@@ -63,7 +63,7 @@ class Map{
                                 opacity: 1,
                                 duration: 0.35,
                                 onComplete: () => {
-                                    this.battle.animateBattle();
+                                    this.battle.startBattle();
     
                                     gsap.to('#overlappingDiv', {
                                         opacity: 0,
