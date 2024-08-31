@@ -2,99 +2,61 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-    <style>
-        *{
-            font-family: "Press Start 2P", system-ui;
-        }
-
-        body {
-            background-color: black;
-        }
-
-        h1 {
-            margin: 0px;
-        }
-
-        button {
-            border: 0;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #ddd;
-        }
-
-        .attackTypeContainer {
-            margin-left: 4px;
-            width: 38%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f8f8;
-            border-top: 8px solid #7873a2;
-            border-bottom: 8px solid #7873a2;
-            border-left: 8px solid #7873a2;
-            border-right: 8px solid #7873a2;
-            border-radius: 10px;        
-        }
-
-        .attackBoxContainer{
-            background-color: #2a3134;
-            height: 154px;
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            border-top: 4px #2a3134 solid;
-            border-bottom: 4px #2a3134 solid;
-            border-left: 4px #2a3134 solid;
-            border-right: 4px #2a3134 solid;
-            display: flex;
-        }
-
-        .attackSelectionContainer{
-            width: 62%;
-            background-color: #f8f8f8;
-            border-top: 8px solid #7873a2;
-            border-bottom: 8px solid #7873a2;
-            border-left: 8px solid #7873a2;
-            border-right: 8px solid #7873a2;
-            border-radius: 10px;
-            position: relative;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .attackTypeText{
-            font-size: 16px;
-        }
-
-    </style>
-
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <div style="display: inline-block; position: relative">
-    <div id="overlappingDiv"
-         style="background-color: black; 
-                position: absolute;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                opacity: 0;
-                pointer-events: none;
-               "
-    ></div>
-    <canvas></canvas>
+    <div id="overlappingDiv"></div>
 
+    <!-- Health bar Oposing Pokemon -->
+    <div class="healthBar healthBarOposingPokemon">
+
+        <div class="healthBarInfo">
+            <div class="healthBarInfoLeftGroup">
+                <h1 class="attackTypeText" id="pokemonOposingName"></h1>
+                <img src="" class="genderImage" id="pokemonOposingGender">   
+            </div> 
+            <h1 class="attackTypeText" id="pokemonOposingLevel">Lv. 5</h1>      
+        </div>           
+
+        <div style="position: relative;">
+            <div class = "healthBarHP healthBarHPDifference"></div>
+            <div class = "healthBarHP healthBarHPGreen"></div>
+        </div>        
+    </div>
+
+    <!-- Health bar Friend Pokemon -->
+    <div class="healthBar healthBarFriendPokemon">
+
+        <div class="healthBarInfo">
+            <div class="healthBarInfoLeftGroup">
+                <h1 class="attackTypeText" id="pokemonFriendName"></h1>
+                <img src="" class="genderImage" id="pokemonFriendGender">   
+            </div> 
+            <h1 class="attackTypeText" id="pokemonFriendLevel">Lv. 5</h1>      
+        </div>           
+
+        <div style="position: relative;">
+            <div class = "healthBarHP healthBarHPDifference"></div>
+            <div class = "healthBarHP healthBarHPGreen"></div>
+        </div>        
+
+        <div class="healthBarHPNumber">
+            <h1 class="attackTypeText">20</h1>
+            <h1 class="attackTypeText">/</h1>
+            <h1 class="attackTypeText">20</h1>
+        </div>
+    </div>
+
+    <canvas></canvas>    
+
+    <!-- Dialogue Box  -->
     <div class="attackBoxContainer">   
         <div class="attackSelectionContainer">      
-            <button>Attack1</button>
-            <button>Attack2</button>
-            <button>Attack3</button>
-            <button>Attack4</button>  
+            <button id="Attack1"></button>
+            <button id="Attack2"></button>
+            <button id="Attack3"></button>
+            <button id="Attack4"></button>  
         </div> 
 
         <div class="attackTypeContainer">
@@ -116,5 +78,6 @@
 <script src = 'classes/Sprite.js'></script>
 <script src = 'classes/KeyEvents.js'></script>
 <script src = 'classes/Battle.js'></script>
+<script src = 'classes/utils.js'></script>
 <script src = 'index.js'></script>
 

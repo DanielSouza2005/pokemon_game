@@ -16,6 +16,7 @@ class Pokemon {
             this.defineShinyGeneric(pokemon.shiny); 
 
             this.defineMovesGeneric(pokemon.moves); 
+            this.defineGenderGeneric(getRandomInt(0, 1));
             
             return this;
         }
@@ -140,15 +141,25 @@ class Pokemon {
     }
 
     defineGenderGeneric(gender){        
-        if(gender === "Male"){
+        if(gender === 0){
             this.gender = "Male";
         }
-        else if (gender === "Female"){
+        else if (gender === 1){
             this.gender = "Female";
         }
         else {
             this.gender = "Unknown";
-        }   
+        }  
+
+        // if(gender === "Male"){
+        //     this.gender = "Male";
+        // }
+        // else if (gender === "Female"){
+        //     this.gender = "Female";
+        // }
+        // else {
+        //     this.gender = "Unknown";
+        // }   
     }
 
     defineShinyGeneric(shiny){

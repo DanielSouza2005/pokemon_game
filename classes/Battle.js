@@ -14,6 +14,8 @@ class Battle {
         await this.initializePokemonFriend();
         
         this.animateBattle();
+        this.renderAttacks();
+        this.renderHealthBar();
     }
 
     animateBattle = () => {
@@ -21,7 +23,7 @@ class Battle {
         this.image.draw();     
         
         this.renderPokemonOposing();
-        this.renderPokemonFriend();
+        this.renderPokemonFriend();                
     }
 
     async initializePokemonOposing() {
@@ -37,8 +39,8 @@ class Battle {
 
         this.pokemonOposingSprite = new Sprite({
             position: {
-                x: 800,
-                y: 100
+                x: 778,
+                y: 85
             },
             image: pokemonOposingImage,
         });
@@ -49,7 +51,7 @@ class Battle {
     async initializePokemonFriend() {
         const pokemonFriend = await new Pokemon({
             level: { number: 5 },
-            id: 25
+            id: 25 //Pikachu
         });
 
         const front_spriteFriend = './images/back/' + pokemonFriend.id + '.png';//pokemonFriend.back_sprite;
@@ -78,5 +80,55 @@ class Battle {
         if (this.pokemonFriendSprite) {
             this.pokemonFriendSprite.draw();
         }
+    }
+
+    renderAttacks(){
+        let i = 0;
+        while(i < 4){
+            let move = this.pokemonFriend.moves.moves[i];
+
+            if (move && move.name) {
+                document.getElementById("Attack" + (i + 1)).innerHTML = move.name;
+            }
+            else {
+                document.getElementById("Attack" + (i + 1)).innerHTML = "-";
+            }
+
+            i++;
+        }      
+    }
+
+    renderHealthBar(){
+        // Name
+        document.getElementById("pokemonFriendName").innerHTML = capitalizeFirstLetter(this.pokemonFriend.name);
+        document.getElementById("pokemonOposingName").innerHTML = capitalizeFirstLetter(this.pokemonOposing.name);
+
+        console.log(this.pokemonFriend);
+        console.log(document.getElementById("pokemonFriendGender"));
+         
+        // Gender          
+        if (this.pokemonFriend.gender === "Male"){
+            document.getElementById("pokemonFriendGender").src = "./images/icons/male.png";
+        } 
+        else if (this.pokemonFriend.gender === "Female"){
+            document.getElementById("pokemonFriendGender").src = "./images/icons/female.png";
+        }
+        else {
+            document.getElementById("pokemonFriendGender").src = "" ;
+        }  
+
+        if (this.pokemonOposing.gender === "Male"){
+            document.getElementById("pokemonOposingGender").src = "./images/icons/male.png";
+        } 
+        else if (this.pokemonOposing.gender === "Female"){
+            document.getElementById("pokemonOposingGender").src = "./images/icons/female.png";
+        }
+        else {
+            document.getElementById("pokemonOposingGender").src = "" ;
+        }  
+       
+        // Level
+        document.getElementById("pokemonFriendLevel").innerHTML  = "Lv. " + this.pokemonFriend.level;
+        document.getElementById("pokemonOposingLevel").innerHTML = "Lv. " +  this.pokemonOposing.level;
     }
 }
