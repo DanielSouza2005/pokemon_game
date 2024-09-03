@@ -16,6 +16,13 @@ class Battle {
         this.animateBattle();
         this.renderAttacks();
         this.renderHealthBar();
+
+        //Loads the attack event to the buttons
+        document.querySelectorAll('button').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
+            })
+        })
     }
 
     animateBattle = () => {
@@ -102,9 +109,6 @@ class Battle {
         // Name
         document.getElementById("pokemonFriendName").innerHTML = capitalizeFirstLetter(this.pokemonFriend.name);
         document.getElementById("pokemonOposingName").innerHTML = capitalizeFirstLetter(this.pokemonOposing.name);
-
-        console.log(this.pokemonFriend);
-        console.log(document.getElementById("pokemonFriendGender"));
          
         // Gender          
         if (this.pokemonFriend.gender === "Male"){
@@ -131,4 +135,11 @@ class Battle {
         document.getElementById("pokemonFriendLevel").innerHTML  = "Lv. " + this.pokemonFriend.level;
         document.getElementById("pokemonOposingLevel").innerHTML = "Lv. " +  this.pokemonOposing.level;
     }
+
+    handleAttack(pokemonFriend, pokemonOposing, pokemonFriendAttack){
+        console.log(pokemonFriend)
+        console.log(pokemonOposing)
+        console.log(pokemonFriendAttack)
+    }
+
 }
