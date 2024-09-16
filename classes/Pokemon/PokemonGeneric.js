@@ -222,18 +222,21 @@ class Pokemon {
     returnStats(baseStatus){  
         baseStatus.forEach((stat) => {
             let i = 0;
-            console.log(stat)
+            // console.log(stat)
 
             if (stat.stat.name === 'hp') {
-                this.stats.push(Math.floor(0.1 * (2 * stat.base_stat + this.IVs[i] + Math.floor(0.25 * this.EVs[i])) + this.level + 10));
+                this.stats.push(Math.floor(0.01 * (2 * stat.base_stat + this.IVs[i] + Math.floor(0.25 * this.EVs[i])) * this.level) + this.level + 10);
             } 
             else{
-                this.stats.push(0)
+                this.stats.push(Math.floor(0.01 * (2 * stat.base_stat + this.IVs[i] + Math.floor(0.25 * this.EVs[i])) * this.level) + 5);
             }
 
             i++;
         }) 
 
-        console.log(this.stats)
+        console.log(this.name)
+        console.log(this.baseStatus)
+        console.log(this.IVs)        
+        console.log(this.stats)                 
     }
 }
