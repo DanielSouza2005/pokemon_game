@@ -17,10 +17,13 @@ class Battle {
         this.renderAttacks();
         this.renderHealthBar();
 
-        //Loads the attack event to the buttons
         document.querySelectorAll('button').forEach((button) => {
             button.addEventListener('click', () => {
                 this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
+            })
+
+            button.addEventListener('mouseover', () => {
+                this.showMoveDescription(this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
             })
         })
     }
@@ -134,12 +137,118 @@ class Battle {
         // Level
         document.getElementById("pokemonFriendLevel").innerHTML  = "Lv. " + this.pokemonFriend.level;
         document.getElementById("pokemonOposingLevel").innerHTML = "Lv. " +  this.pokemonOposing.level;
+    }    
+
+    handleAttack(pokemonFriend, pokemonOposing, move){
+        let damage = 0;
+        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);
+        let percentage = 0;
+
+        pokemonOposing.battleStats[0] -= damage; 
+        if (pokemonOposing.battleStats[0] < 0)
+            pokemonOposing.battleStats[0] = 0; 
+
+        if (damage > 0) {
+            percentage = calculatePercentageDamage(pokemonOposing.battleStats[0], pokemonOposing.stats[0]);
+
+            gsap.to('#enemyHealthBar', {
+                width: percentage + '%'
+            });   
+        }        
     }
 
-    handleAttack(pokemonFriend, pokemonOposing, pokemonFriendAttack){
-        console.log(pokemonFriend)
-        console.log(pokemonOposing)
-        console.log(pokemonFriendAttack)
+    calculateDamage(move, pokemonFriend, pokemonAffected){
+        // console.log(pokemonFriend)
+        // console.log(pokemonAffected)
+        // console.log(move) 
+
+        //TODO - Type effectiveness
+
+        let damage = 0;
+        let attack = 0;
+        let defense = 0;
+        let physicalSpecial = 0;
+        let STAB = 1;
+        let criticalDamage = 1;
+        let random = 1;                                                                      ;
+        
+        physicalSpecial = this.returnPhysicalSpecialMove(move.type);
+
+        //turn into a function
+        switch(physicalSpecial){
+            case 0: {
+                attack = pokemonFriend.battleStats[3];
+                defense = pokemonAffected.battleStats[4];
+                break;
+            }
+
+            case 1: {
+                attack = pokemonFriend.battleStats[1];
+                defense = pokemonAffected.battleStats[2];
+                break;
+            }
+        }
+
+        STAB = this.returnSTABMove(move, pokemonFriend);
+        criticalDamage = this.returnCriticalHit();
+        random = this.returnRowRatio();
+        
+        if (move.power === null){
+            damage = 0;
+        }
+        else {
+            damage = Math.round((((((2 * pokemonFriend.level) / 5) * move.power * (attack / defense)) / 50) + 2) * criticalDamage * STAB * random);
+        }
+
+        return damage;
+    }
+
+    showMoveDescription(move){
+        if (move === undefined) {
+            document.getElementById("attackType").innerHTML  = "";
+        }            
+        else {
+            document.getElementById("attackType").innerHTML  = "Type/" + move.type;
+        }       
+    }
+
+    returnPhysicalSpecialMove(type){
+        type = type.toUpperCase();
+    
+        if ((type === 'NORMAL') || (type === 'FIGHTING') || (type === 'POISON') ||
+            (type === 'GROUND') || (type === 'FLYING')   || (type === 'BUG')    ||
+            (type === 'ROCK')   || (type === 'GHOST')    || (type === 'STEEL')) {
+            return 0; //Pyshical
+        }     
+        else if ((type === 'FIRE')   || (type === 'WATER') || (type === 'ELECTRIC') ||
+                 (type === 'GRASS')  || (type === 'ICE')   || (type === 'PSYCHIC')  ||
+                 (type === 'DRAGON') || (type === 'DARK')) {
+            return 1; //Special
+        }
+        else {
+            return 2; //None
+        }
+    }  
+
+    returnCriticalHit(){
+        if (getRandomInt(0, 24) === 0) {
+            return 2;  
+        } 
+        else {
+            return 1;
+        }
+    }
+
+    returnSTABMove(move, pokemonFriend){
+        if ((move.type.toUpperCase() === (pokemonFriend.type1 ? pokemonFriend.type1.toUpperCase() : "") ) ||
+            (move.type.toUpperCase() === (pokemonFriend.type2 ? pokemonFriend.type2.toUpperCase() : "") )) {
+                return 1.5;
+        }
+    }
+
+    returnRowRatio(){
+        let randomInt = Math.floor(Math.random() * (100 - 85 + 1)) + 85;
+        return randomInt / 100;
     }
 
 }

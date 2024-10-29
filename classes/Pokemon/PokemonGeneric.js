@@ -20,6 +20,7 @@ class Pokemon {
             this.returnIVs();
             this.returnEVs();
             this.returnStats(this.baseStatus);
+            this.returnBattleStats(this.stats);
             
             return this;
         }
@@ -56,6 +57,7 @@ class Pokemon {
             PokemonProps.weight = pokemonData.weight; 
             PokemonProps.baseStatus = pokemonData.stats;
             PokemonProps.stats = [];
+            PokemonProps.battleStats = [];
             PokemonProps.front_sprite = pokemonData['sprites']['versions']['generation-iii']['firered-leafgreen']['front_default'];
             PokemonProps.back_sprite = pokemonData['sprites']['versions']['generation-iii']['firered-leafgreen']['back_default'];
             PokemonProps.front_shiny = pokemonData['sprites']['versions']['generation-iii']['firered-leafgreen']['front_shiny']; 
@@ -222,7 +224,6 @@ class Pokemon {
     returnStats(baseStatus){  
         baseStatus.forEach((stat) => {
             let i = 0;
-            // console.log(stat)
 
             if (stat.stat.name === 'hp') {
                 this.stats.push(Math.floor(0.01 * (2 * stat.base_stat + this.IVs[i] + Math.floor(0.25 * this.EVs[i])) * this.level) + this.level + 10);
@@ -232,11 +233,10 @@ class Pokemon {
             }
 
             i++;
-        }) 
+        })                
+    }
 
-        console.log(this.name)
-        console.log(this.baseStatus)
-        console.log(this.IVs)        
-        console.log(this.stats)                 
+    returnBattleStats(stats){
+        this.battleStats = [...stats];
     }
 }
