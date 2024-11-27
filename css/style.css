@@ -29,6 +29,7 @@ button:hover {
     left: 0;
     opacity: 0;
     pointer-events: none;
+    z-index: 10
 }
 
 .attackTypeContainer {
@@ -67,7 +68,6 @@ button:hover {
     border-left: 8px solid #7873a2;
     border-right: 8px solid #7873a2;
     border-radius: 10px;
-    position: relative;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
 }
@@ -138,4 +138,21 @@ button:hover {
 .genderImage{
     width: 16px;
     margin-left: 4px;
+}
+
+.dialogBoxClass {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    padding : 25px;
+    display: none;
+    background-color: #f8f8f8;
+    border-top: 8px solid #7873a2;
+    border-bottom: 8px solid #7873a2;
+    border-left: 8px solid #7873a2;
+    border-right: 8px solid #7873a2;
+    border-radius: 10px;
 }

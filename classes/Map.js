@@ -5,18 +5,21 @@ class Map{
                  foreground,
                  battleZones,
                  battle}){
-        this.background  = background;
-        this.boundaries  = boundaries;
-        this.player      = player;
-        this.foreground  = foreground; 
-        this.battleZones = battleZones;
-        this.battle      = battle;
-        this.moving = false;
-        this.animate = this.animate.bind(this);
+        this.background       = background;
+        this.boundaries       = boundaries;
+        this.player           = player;
+        this.foreground       = foreground; 
+        this.battleZones      = battleZones;
+        this.battle           = battle;
+        this.moving           = false;
+        this.animate          = this.animate.bind(this);
     }
 
     animate = () => {
+        document.querySelector('#battleInterface').style.display = "none";
+
         const animationId = window.requestAnimationFrame(this.animate); 
+
         this.background.draw(); 
 
         this.boundaries.forEach((boundary) => {
@@ -31,7 +34,7 @@ class Map{
         this.foreground.draw(); 
 
         this.moving = true;
-        this.player.moving = false;
+        this.player.moving = false;      
 
         if (this.battle.initiaded) return;
 
@@ -57,17 +60,18 @@ class Map{
                         opacity : 1,
                         repeat: 3,
                         yoyo: true,
-                        duration: 0.35,
+                        duration: 0.5,
                         onComplete: () => {
                             gsap.to('#overlappingDiv', {
                                 opacity: 1,
-                                duration: 0.35,
+                                duration: 0.5,
                                 onComplete: () => {
+                                    document.querySelector('#battleInterface').style.display = "block";
                                     this.battle.startBattle();
     
                                     gsap.to('#overlappingDiv', {
                                         opacity: 0,
-                                        duration: 0.35
+                                        duration: 0.5
                                     });
                                 }
                             });                                             
@@ -138,7 +142,7 @@ class Map{
             }
         } 
         else if (keyEvents.keys.s.pressed && keyEvents.lastKey === 's') {
-            this. player.moving = true;
+            this.player.moving = true;
             this.player.image = this.player.sprites.down;
     
             for(let i = 0; i < this.boundaries.length; i++){

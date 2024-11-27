@@ -8,63 +8,71 @@
 <div style="display: inline-block; position: relative">
     <div id="overlappingDiv"></div>
 
-    <!-- Health bar Oposing Pokemon -->
-    <div class="healthBar healthBarOposingPokemon">
-
-        <div class="healthBarInfo">
-            <div class="healthBarInfoLeftGroup">
-                <h1 class="attackTypeText" id="pokemonOposingName"></h1>
-                <img src="" class="genderImage" id="pokemonOposingGender">   
-            </div> 
-            <h1 class="attackTypeText" id="pokemonOposingLevel">Lv. 5</h1>      
-        </div>           
-
-        <div style="position: relative;">
-            <div class = "healthBarHP healthBarHPDifference"></div>
-            <div id = "enemyHealthBar"
-                 class = "healthBarHP healthBarHPGreen"></div>
-        </div>        
-    </div>
-
-    <!-- Health bar Friend Pokemon -->
-    <div class="healthBar healthBarFriendPokemon">
-
-        <div class="healthBarInfo">
-            <div class="healthBarInfoLeftGroup">
-                <h1 class="attackTypeText" id="pokemonFriendName"></h1>
-                <img src="" class="genderImage" id="pokemonFriendGender">   
-            </div> 
-            <h1 class="attackTypeText" id="pokemonFriendLevel">Lv. 5</h1>      
-        </div>           
-
-        <div style="position: relative;">
-            <div class = "healthBarHP healthBarHPDifference"></div>
-            <div class = "healthBarHP healthBarHPGreen"></div>
-        </div>        
-
-        <div class="healthBarHPNumber">
-            <h1 class="attackTypeText">20</h1>
-            <h1 class="attackTypeText">/</h1>
-            <h1 class="attackTypeText">20</h1>
-        </div>
-    </div>
-
     <canvas></canvas>    
 
-    <!-- Dialogue Box  -->
-    <div class="attackBoxContainer">   
-        <div class="attackSelectionContainer">      
-            <button id="Attack1"></button>
-            <button id="Attack2"></button>
-            <button id="Attack3"></button>
-            <button id="Attack4"></button>  
-        </div> 
+    <div id="battleInterface">
+        <!-- Health bar Oposing Pokemon -->
+        <div class="healthBar healthBarOposingPokemon">
 
-        <div class="attackTypeContainer">
-            <h1 class="attackTypeText"
-                id = "attackType"></h1>
+            <div class="healthBarInfo">
+                <div class="healthBarInfoLeftGroup">
+                    <h1 class="attackTypeText" id="pokemonOposingName"></h1>
+                    <img src="" class="genderImage" id="pokemonOposingGender">   
+                </div> 
+                <h1 class="attackTypeText" id="pokemonOposingLevel">Lv. 5</h1>      
+            </div>           
+
+            <div style="position: relative;">
+                <div class = "healthBarHP healthBarHPDifference"></div>
+                <div id = "enemyHealthBar"
+                    class = "healthBarHP healthBarHPGreen"></div>
+            </div>        
         </div>
-    </div>
+
+        <!-- Health bar Friend Pokemon -->
+        <div class="healthBar healthBarFriendPokemon">
+
+            <div class="healthBarInfo">
+                <div class="healthBarInfoLeftGroup">
+                    <h1 class="attackTypeText" id="pokemonFriendName"></h1>
+                    <img src="" class="genderImage" id="pokemonFriendGender">   
+                </div> 
+                <h1 class="attackTypeText" id="pokemonFriendLevel">Lv. 5</h1>      
+            </div>           
+
+            <div style="position: relative;">
+                <div class = "healthBarHP healthBarHPDifference"></div>
+                <div id = "friendHealthBar" 
+                    class = "healthBarHP healthBarHPGreen"></div>
+            </div>        
+
+            <div class="healthBarHPNumber">
+                <h1 id="remainingHPFriend" 
+                    class="attackTypeText">20</h1>
+                <h1 class="attackTypeText">/</h1>
+                <h1 id="totalHPFriend"
+                    class="attackTypeText">20</h1>
+            </div>
+        </div>
+
+         <!-- Dialogue Box  -->
+        <div class="attackBoxContainer">   
+            <div id="dialogBox"
+                class="dialogBoxClass">teste</div>
+
+            <div class="attackSelectionContainer">      
+                <button id="Attack1"></button>
+                <button id="Attack2"></button>
+                <button id="Attack3"></button>
+                <button id="Attack4"></button>  
+            </div> 
+
+            <div class="attackTypeContainer">
+                <h1 class="attackTypeText"
+                    id = "attackType"></h1>
+            </div>
+        </div>
+    </div>        
 </div>
 
 <script src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js" integrity="sha512-H6cPm97FAsgIKmlBA4s774vqoN24V5gSQL4yBTDOY2su2DeXZVhQPxFK4P6GPdnZqM9fg1G3cMv5wD7e6cFLZQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

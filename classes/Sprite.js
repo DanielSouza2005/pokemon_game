@@ -10,10 +10,13 @@ class Sprite {
         }
 
         this.moving = false; 
-        this.sprites = sprites;         
+        this.sprites = sprites;   
+        this.opacity = 1;      
     }
 
     draw(){
+        context.globalAlpha = this.opacity;
+
         context.drawImage(
             this.image,  
             this.frames.val * this.width,                      //CROPING THE START X OF THE IMAGE

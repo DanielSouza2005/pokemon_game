@@ -1,3 +1,5 @@
+let animationBattleId;
+
 class Battle {
     constructor({image}){
         this.pokemonOposing = null;
@@ -6,20 +8,21 @@ class Battle {
         this.pokemonFriend = null;
         this.pokemonFriendSprite = null;
 
-        this.image = image;                    
+        this.image = image;           
+        this.initiaded = false;
     }
 
-    async startBattle() {
+    async startBattle() { 
         await this.initializePokemonOposing();
         await this.initializePokemonFriend();
-        
+
         this.animateBattle();
         this.renderAttacks();
         this.renderHealthBar();
 
         document.querySelectorAll('button').forEach((button) => {
             button.addEventListener('click', () => {
-                this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
+                this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1], false, false);
             })
 
             button.addEventListener('mouseover', () => {
@@ -29,7 +32,7 @@ class Battle {
     }
 
     animateBattle = () => {
-        window.requestAnimationFrame(this.animateBattle);
+        animationBattleId = window.requestAnimationFrame(this.animateBattle);
         this.image.draw();     
         
         this.renderPokemonOposing();
@@ -96,73 +99,157 @@ class Battle {
         let i = 0;
         while(i < 4){
             let move = this.pokemonFriend.moves.moves[i];
-
-            if (move && move.name) {
-                document.getElementById("Attack" + (i + 1)).innerHTML = move.name;
-            }
-            else {
-                document.getElementById("Attack" + (i + 1)).innerHTML = "-";
-            }
-
+            document.getElementById("Attack" + (i + 1)).innerHTML = (move && move.name) ? move.name : "-";            
             i++;
         }      
     }
 
     renderHealthBar(){
+        const genderIcons = {
+            Male: "./images/icons/male.png",
+            Female: "./images/icons/female.png",
+        };           
+
         // Name
         document.getElementById("pokemonFriendName").innerHTML = capitalizeFirstLetter(this.pokemonFriend.name);
         document.getElementById("pokemonOposingName").innerHTML = capitalizeFirstLetter(this.pokemonOposing.name);
          
-        // Gender          
-        if (this.pokemonFriend.gender === "Male"){
-            document.getElementById("pokemonFriendGender").src = "./images/icons/male.png";
-        } 
-        else if (this.pokemonFriend.gender === "Female"){
-            document.getElementById("pokemonFriendGender").src = "./images/icons/female.png";
-        }
-        else {
-            document.getElementById("pokemonFriendGender").src = "" ;
-        }  
-
-        if (this.pokemonOposing.gender === "Male"){
-            document.getElementById("pokemonOposingGender").src = "./images/icons/male.png";
-        } 
-        else if (this.pokemonOposing.gender === "Female"){
-            document.getElementById("pokemonOposingGender").src = "./images/icons/female.png";
-        }
-        else {
-            document.getElementById("pokemonOposingGender").src = "" ;
-        }  
+        // Gender         
+        document.getElementById("pokemonFriendGender").src = genderIcons[this.pokemonFriend.gender] || "";
+        document.getElementById("pokemonOposingGender").src = genderIcons[this.pokemonOposing.gender] || "";
        
         // Level
         document.getElementById("pokemonFriendLevel").innerHTML  = "Lv. " + this.pokemonFriend.level;
         document.getElementById("pokemonOposingLevel").innerHTML = "Lv. " +  this.pokemonOposing.level;
     }    
 
-    handleAttack(pokemonFriend, pokemonOposing, move){
+    handleAttack(pokemonFriend, pokemonOposing, move, isEnemy, secondTime){
+        if (move === undefined) return;
+
+        const healthBarId = isEnemy ? '#friendHealthBar' : '#enemyHealthBar';
+        const remainingHPFriendId = document.getElementById("remainingHPFriend");
+        const pokemon = isEnemy ? pokemonFriend : pokemonOposing;
+        const pokemonDialog = pokemonOposing ? pokemonFriend :  pokemonOposing;
+        const pokemonFainted = pokemonOposing ? pokemonOposing : pokemonFriend;
+        const HPIndex = 0;   
+        const pokemonHP = pokemon.battleStats[HPIndex];        
+
         let damage = 0;
-        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);
         let percentage = 0;
+        let attackdialog = pokemonDialog.name + " usou " + move.name + "!";
+        let dialog = pokemonFainted.name + " desmaiou!";        
 
-        pokemonOposing.battleStats[0] -= damage; 
-        if (pokemonOposing.battleStats[0] < 0)
-            pokemonOposing.battleStats[0] = 0; 
+        document.querySelector("#dialogBox").style.display = 'block';
+        document.querySelector("#dialogBox").innerHTML = attackdialog;        
 
-        if (damage > 0) {
-            percentage = calculatePercentageDamage(pokemonOposing.battleStats[0], pokemonOposing.stats[0]);
+        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);        
+        pokemon.battleStats[HPIndex] -= damage; 
 
-            gsap.to('#enemyHealthBar', {
-                width: percentage + '%'
-            });   
-        }        
+        //SE DESMAIOU
+        if (pokemon.battleStats[HPIndex] < 0) {
+            pokemon.battleStats[HPIndex] = 0;
+            
+            if (secondTime) {
+                gsap.to({value: pokemonHP}, {
+                    value: pokemon.battleStats[HPIndex],
+                    duration: 1,
+                    ease: "none",
+                    onUpdate: function () {
+                        remainingHPFriendId.innerHTML = Math.ceil(this.targets()[0].value);
+                    }
+                });
+            }   
+
+            gsap.to(healthBarId, {
+                width: `${percentage}%`,
+                duration: 1,
+                onComplete: () => {
+                    document.querySelector("#dialogBox").innerHTML = dialog;        
+                    this.handleFaint(pokemonFriend, pokemonOposing, pokemonDialog);
+                }
+            }); 
+
+            return;
+        }   
+        
+        if (pokemon.battleStats[HPIndex] > 0 && damage > 0)  {
+            percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);
+
+            gsap.to(healthBarId, {
+                width: `${percentage}%`,
+                duration: 1,
+                onComplete: () => {
+                    document.querySelector("#dialogBox").style.display = 'none';
+
+                    if (!secondTime) {
+                        const randomMove = Math.floor(Math.random() * pokemonOposing.moves.moves.length);
+                        this.handleAttack(pokemonOposing, pokemonFriend, pokemonOposing.moves.moves[randomMove] , true, true);
+                    }
+                }
+            });  
+
+            if (secondTime) {
+                gsap.to({value: pokemonHP}, {
+                    value: pokemon.battleStats[HPIndex],
+                    duration: 1,
+                    ease: "none",
+                    onUpdate: function () {
+                        remainingHPFriendId.innerHTML = Math.ceil(this.targets()[0].value);
+                    }
+                });
+            }            
+        } 
+        else {
+            gsap.to(healthBarId, {
+                width: healthBarId.width,
+                duration: 1,
+                onComplete: () => {
+                    document.querySelector("#dialogBox").style.display = 'none';
+
+                    if (!secondTime) {
+                        const randomMove = Math.floor(Math.random() * pokemonOposing.moves.moves.length);
+                        this.handleAttack(pokemonOposing, pokemonFriend, pokemonOposing.moves.moves[randomMove] , true, true);
+                    }
+                }
+            }); 
+        }      
+    }
+
+    handleFaint(pokemon){
+        // const pokemonFainted = (pokemon === this.pokemonFriend) ? this.pokemonOposing :  this.pokemonFriend;
+        const pokemonFaintedSprite = (pokemon === this.pokemonFriend) ? this.pokemonOposingSprite : this.pokemonFriendSprite;
+
+        gsap.to(pokemonFaintedSprite.position, {
+            y: pokemonFaintedSprite.position.y + 20,
+            duration: 2
+        })
+
+        gsap.to(pokemonFaintedSprite, {
+            opacity: 0,
+            duration: 2
+        })
+
+        gsap.to('#overlappingDiv', {
+            opacity: 1,
+            duration: 1,
+            onComplete: () => {
+                cancelAnimationFrame(animationBattleId);
+                document.querySelector('#battleInterface').style.display = "none";
+                mapGeneral.animate(); 
+
+                gsap.to('#overlappingDiv', {
+                    opacity: 0
+                });
+
+                mapGeneral.battle.initiaded = false;
+            }
+        });  
     }
 
     calculateDamage(move, pokemonFriend, pokemonAffected){
-        // console.log(pokemonFriend)
-        // console.log(pokemonAffected)
-        // console.log(move) 
-
-        //TODO - Type effectiveness
+        if (!move || typeof move.type !== "string" || typeof move.power !== "number") {
+            return 0;
+        }
 
         let damage = 0;
         let attack = 0;
@@ -170,46 +257,28 @@ class Battle {
         let physicalSpecial = 0;
         let STAB = 1;
         let criticalDamage = 1;
-        let random = 1;                                                                      ;
-        
+        let random = 1;     
+        let type1Effectiveness = 1;  
+        let type2Effectiveness = 1;    
+               
         physicalSpecial = this.returnPhysicalSpecialMove(move.type);
-
-        //turn into a function
-        switch(physicalSpecial){
-            case 0: {
-                attack = pokemonFriend.battleStats[3];
-                defense = pokemonAffected.battleStats[4];
-                break;
-            }
-
-            case 1: {
-                attack = pokemonFriend.battleStats[1];
-                defense = pokemonAffected.battleStats[2];
-                break;
-            }
-        }
-
+        ({ attack, defense } = this.returnAttackDefense(physicalSpecial, pokemonFriend, pokemonAffected));
         STAB = this.returnSTABMove(move, pokemonFriend);
         criticalDamage = this.returnCriticalHit();
         random = this.returnRowRatio();
-        
-        if (move.power === null){
-            damage = 0;
-        }
-        else {
-            damage = Math.round((((((2 * pokemonFriend.level) / 5) * move.power * (attack / defense)) / 50) + 2) * criticalDamage * STAB * random);
-        }
+        type1Effectiveness = this.returnTypeEffectiveness(move.type, pokemonAffected.type1);
+        type2Effectiveness = this.returnTypeEffectiveness(move.type, pokemonAffected.type2);
+
+        let baseDamage = ((2 * pokemonFriend.level) / 5) * move.power * (attack / defense);
+        let modifiers = criticalDamage * STAB * random * type1Effectiveness * type2Effectiveness;
+
+        damage = (move.power === null) ? 0 : Math.round((baseDamage / 50 + 2) * modifiers);             
 
         return damage;
     }
 
     showMoveDescription(move){
-        if (move === undefined) {
-            document.getElementById("attackType").innerHTML  = "";
-        }            
-        else {
-            document.getElementById("attackType").innerHTML  = "Type/" + move.type;
-        }       
+        document.getElementById("attackType").innerHTML = (move === undefined) ? "" : "Type/" + move.type;     
     }
 
     returnPhysicalSpecialMove(type){
@@ -249,6 +318,63 @@ class Battle {
     returnRowRatio(){
         let randomInt = Math.floor(Math.random() * (100 - 85 + 1)) + 85;
         return randomInt / 100;
+    }
+
+    returnAttackDefense(physicalSpecial, pokemonFriend, pokemonAffected){
+        let _attack = 0;
+        let _defense = 0;
+
+        switch(physicalSpecial){
+            case 0: {
+                _attack = pokemonFriend.battleStats[3];
+                _defense = pokemonAffected.battleStats[4];
+                break;
+            }
+
+            case 1: {
+                _attack = pokemonFriend.battleStats[1];
+                _defense = pokemonAffected.battleStats[2];
+                break;
+            }
+
+            case 2: {
+                _attack = 0;
+                _defense = 0;
+                break; 
+            }
+        }
+
+        return { attack: _attack, defense: _defense };
+    }
+
+    returnTypeEffectiveness(move, targetType){
+        const typeChart = {
+            normal: { rock: 0.5, ghost: 0, steel: 0.5 },
+            fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
+            water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+            electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+            grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
+            ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
+            fighting: { normal: 2, ice: 2, rock: 2, dark: 2, steel: 2, flying: 0.5, poison: 0.5, psychic: 0.5, bug: 0.5, ghost: 0, fairy: 0.5 },
+            poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
+            ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
+            flying: { electric: 0.5, grass: 2, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
+            psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
+            bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
+            rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
+            ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
+            dragon: { dragon: 2, steel: 0.5, fairy: 0 },
+            dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
+            steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, fairy: 2 },
+            fairy: { fighting: 2, dragon: 2, dark: 2, fire: 0.5, poison: 0.5, steel: 0.5 },
+        };
+
+        let effectiveness = 1;
+
+        const typeEffectiveness = typeChart[move]?.[targetType] ?? 1; 
+        effectiveness *= typeEffectiveness;
+   
+        return effectiveness;
     }
 
 }
