@@ -10,6 +10,7 @@ class Battle {
 
         this.image = image;           
         this.initiaded = false;
+        this.criticalHit = false;
     }
 
     async startBattle() { 
@@ -18,17 +19,7 @@ class Battle {
 
         this.animateBattle();
         this.renderAttacks();
-        this.renderHealthBar();
-
-        document.querySelectorAll('button').forEach((button) => {
-            button.addEventListener('click', () => {
-                this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1], false, false);
-            })
-
-            button.addEventListener('mouseover', () => {
-                this.showMoveDescription(this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
-            })
-        })
+        this.renderHealthBar();        
     }
 
     animateBattle = () => {
@@ -59,6 +50,7 @@ class Battle {
         });
 
         this.pokemonOposing = pokemonOposing; 
+        this.pokemonOposing.battleStats[0] = this.pokemonOposing.stats[0];
     }
 
     async initializePokemonFriend() {
@@ -81,6 +73,7 @@ class Battle {
         });
 
         this.pokemonFriend = pokemonFriend; 
+        this.pokemonFriend.battleStats[0] = this.pokemonFriend.stats[0];
     }
 
     renderPokemonOposing() {
@@ -101,14 +94,27 @@ class Battle {
             let move = this.pokemonFriend.moves.moves[i];
             document.getElementById("Attack" + (i + 1)).innerHTML = (move && move.name) ? move.name : "-";            
             i++;
-        }      
+        }   
+        
+        document.querySelectorAll('button').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.handleAttack(this.pokemonFriend, this.pokemonOposing, this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1], false, false);
+            })
+
+            button.addEventListener('mouseover', () => {
+                this.showMoveDescription(this.pokemonFriend.moves.moves[getNumbersFromString(button.id) - 1]);
+            })
+        })
     }
 
     renderHealthBar(){
         const genderIcons = {
             Male: "./images/icons/male.png",
             Female: "./images/icons/female.png",
-        };           
+        };    
+        
+        //Dialog box
+        document.querySelector("#dialogBox").style.display = 'none';
 
         // Name
         document.getElementById("pokemonFriendName").innerHTML = capitalizeFirstLetter(this.pokemonFriend.name);
@@ -121,6 +127,12 @@ class Battle {
         // Level
         document.getElementById("pokemonFriendLevel").innerHTML  = "Lv. " + this.pokemonFriend.level;
         document.getElementById("pokemonOposingLevel").innerHTML = "Lv. " +  this.pokemonOposing.level;
+
+        // HP
+        document.getElementById("remainingHPFriend").innerHTML = this.pokemonFriend.battleStats[0];
+        document.getElementById("totalHPFriend").innerHTML = this.pokemonFriend.battleStats[0];
+        document.getElementById("friendHealthBar").style.width = "100%";
+        document.getElementById("enemyHealthBar").style.width = "100%";    
     }    
 
     handleAttack(pokemonFriend, pokemonOposing, move, isEnemy, secondTime){
@@ -139,16 +151,30 @@ class Battle {
         let attackdialog = pokemonDialog.name + " usou " + move.name + "!";
         let dialog = pokemonFainted.name + " desmaiou!";        
 
-        document.querySelector("#dialogBox").style.display = 'block';
-        document.querySelector("#dialogBox").innerHTML = attackdialog;        
-
         damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);        
         pokemon.battleStats[HPIndex] -= damage; 
+
+        document.querySelector("#dialogBox").innerHTML = attackdialog; 
+        document.querySelector("#dialogBox").style.display = 'block';             
+        
+        gsap.to(document.querySelector("#dialogBox"), {
+            display: 'block',
+            opacity: 1,     
+            scale: 1,       
+            duration: 0.5,  
+            ease: "none", 
+            onComplete: () => {
+                if (this.criticalHit) {
+                    document.querySelector("#dialogBox").innerHTML = "Foi um ataque critico!";        
+                }                
+            }
+        });
 
         //SE DESMAIOU
         if (pokemon.battleStats[HPIndex] < 0) {
             pokemon.battleStats[HPIndex] = 0;
-            
+            audio.attackHit.play();
+
             if (secondTime) {
                 gsap.to({value: pokemonHP}, {
                     value: pokemon.battleStats[HPIndex],
@@ -158,7 +184,7 @@ class Battle {
                         remainingHPFriendId.innerHTML = Math.ceil(this.targets()[0].value);
                     }
                 });
-            }   
+            };
 
             gsap.to(healthBarId, {
                 width: `${percentage}%`,
@@ -168,12 +194,14 @@ class Battle {
                     this.handleFaint(pokemonFriend, pokemonOposing, pokemonDialog);
                 }
             }); 
-
+            
             return;
         }   
         
+        //SE CAUSOU DANO
         if (pokemon.battleStats[HPIndex] > 0 && damage > 0)  {
-            percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);
+            audio.attackHit.play();
+            percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);  
 
             gsap.to(healthBarId, {
                 width: `${percentage}%`,
@@ -215,35 +243,42 @@ class Battle {
         }      
     }
 
-    handleFaint(pokemon){
-        // const pokemonFainted = (pokemon === this.pokemonFriend) ? this.pokemonOposing :  this.pokemonFriend;
+    handleFaint(pokemon){        
         const pokemonFaintedSprite = (pokemon === this.pokemonFriend) ? this.pokemonOposingSprite : this.pokemonFriendSprite;
 
         gsap.to(pokemonFaintedSprite.position, {
             y: pokemonFaintedSprite.position.y + 20,
             duration: 2
-        })
+        });
 
         gsap.to(pokemonFaintedSprite, {
             opacity: 0,
             duration: 2
-        })
+        });
 
-        gsap.to('#overlappingDiv', {
-            opacity: 1,
-            duration: 1,
-            onComplete: () => {
-                cancelAnimationFrame(animationBattleId);
-                document.querySelector('#battleInterface').style.display = "none";
-                mapGeneral.animate(); 
+        audio.battle.stop();
+        audio.battleVictory.play();
 
-                gsap.to('#overlappingDiv', {
-                    opacity: 0
-                });
+        setTimeout(() => {                             
+            gsap.to('#overlappingDiv', {
+                opacity: 1,
+                duration: 3,
+                onComplete: () => {
+                    cancelAnimationFrame(animationBattleId);
+                    document.querySelector('#battleInterface').style.display = "none";
+                    mapGeneral.animate(); 
+    
+                    gsap.to('#overlappingDiv', {
+                        opacity: 0
+                    });
 
-                mapGeneral.battle.initiaded = false;
-            }
-        });  
+                    audio.battleVictory.stop();                    
+                    audio.map.play();
+    
+                    mapGeneral.battle.initiaded = false;
+                }
+            });      
+        }, 3000);               
     }
 
     calculateDamage(move, pokemonFriend, pokemonAffected){
@@ -272,7 +307,9 @@ class Battle {
         let baseDamage = ((2 * pokemonFriend.level) / 5) * move.power * (attack / defense);
         let modifiers = criticalDamage * STAB * random * type1Effectiveness * type2Effectiveness;
 
-        damage = (move.power === null) ? 0 : Math.round((baseDamage / 50 + 2) * modifiers);             
+        damage = (move.power === null) ? 0 : Math.round((baseDamage / 50 + 2) * modifiers);   
+        
+        this.criticalHit = (criticalDamage > 1) ? true : false;
 
         return damage;
     }

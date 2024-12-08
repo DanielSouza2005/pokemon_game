@@ -53,6 +53,10 @@ class Map{
                     (Math.random() < 0.01)
                 ) {
                     window.cancelAnimationFrame(animationId);
+
+                    audio.map.stop();
+                    audio.battle.play();
+
                     this.battle.initiaded = true;
     
                     //transition

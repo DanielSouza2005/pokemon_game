@@ -5,7 +5,17 @@ class KeyEvents {
     }
 
     addEventListenerKeyDown() {
-        window.addEventListener('keydown', (e) => {
+        let clicked = false; 
+        window.addEventListener('keydown', (e) => {                     
+            if (!clicked) {
+                clicked = true;
+
+                if ((e.key === 'w') || (e.key === 'a') || (e.key === 's') || (e.key === 'd')){
+                    audio.map.play();  
+                }
+
+            }   
+
             switch (e.key) {
                 case 'w':
                     keys.w.pressed = true;
@@ -50,5 +60,12 @@ class KeyEvents {
                     break;    
             }
         });    
+    }
+
+    addEventListenerAudio(){
+        
+        addEventListener('click', () => {
+                       
+        })
     }
 }
