@@ -64,7 +64,7 @@ class Map{
                     audio.battle.play();
 
                     this.battle.initiaded = true;
-                    this.battle.pokemonFainted = false;
+                    this.battle.pokemonFainted = false;                    
     
                     //transition
                     gsap.to('#overlappingDiv', {

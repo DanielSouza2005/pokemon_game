@@ -12,15 +12,17 @@ class Battle {
         this.initiaded = false;
         this.criticalHit = false;
         this.pokemonFainted = false;
+
+        this.count = 0;
     }
 
     async startBattle() { 
         await this.initializePokemonOposing();
         await this.initializePokemonFriend();
 
-        this.animateBattle();
-        this.renderAttacks();
-        this.renderHealthBar();        
+        this.animateBattle(); 
+        this.renderAttacks();       
+        this.renderHealthBar();                    
     }
 
     animateBattle = () => {
@@ -54,7 +56,7 @@ class Battle {
         });
 
         this.pokemonOposing = pokemonOposing; 
-        this.pokemonOposing.battleStats[0] = this.pokemonOposing.stats[0];
+        this.pokemonOposing.battleStats = [...this.pokemonOposing.stats];
     }
 
     async initializePokemonFriend() {
@@ -83,15 +85,10 @@ class Battle {
             image: pokemonFriendImage
         });
         
-        this.pokemonFriend.battleStats[0] = this.pokemonFriend.stats[0];
+        this.pokemonFriend.battleStats = [...this.pokemonFriend.stats];
     }
 
     returnSpritePath(id, gender, shiny, front_back){
-        console.log(id);
-        console.log(gender);
-        console.log(shiny);
-        console.log(front_back);
-
         let spritePath = "./images/";
         let genderPath = (gender === "Male") ? "male/" : "female/";
         let front_backPath = (front_back === "Front") ? "front/" : "back/"; 
@@ -101,8 +98,6 @@ class Battle {
         if (shiny) spritePath += shinyPath;
 
         spritePath += front_backPath + genderPath + id + extension;        
-
-        console.log(spritePath);
 
         return spritePath;
     }
@@ -120,6 +115,10 @@ class Battle {
     }
 
     renderAttacks(){
+        if (this.count > 0) {
+            return;
+        }
+
         let i = 0;
         while(i < 4){
             let move = this.pokemonFriend.moves.moves[i];
@@ -172,22 +171,22 @@ class Battle {
         const HPIndex = 0;   
         const healthBarId = isEnemy ? '#friendHealthBar' : '#enemyHealthBar';
         const remainingHPFriendId = document.getElementById("remainingHPFriend");
-        const pokemon = pokemonOposing;
-        // console.log(pokemon);
+        const pokemon = pokemonOposing;        
         const pokemonDialog = pokemonOposing ? pokemonFriend :  pokemonOposing;
         const pokemonFainted = pokemonOposing ? pokemonOposing : pokemonFriend;        
-        const pokemonHP = pokemon.battleStats[HPIndex];        
-
+        const pokemonHP = pokemon.battleStats[HPIndex];    
+        
         let damage = 0;
         let percentage = 0;
         let attackdialog = pokemonDialog.name + " usou " + move.name + "!";
         let dialog = pokemonFainted.name + " desmaiou!";        
 
-        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing); 
+        // console.log(move);
+        // console.log(pokemon);
 
-        if (damage > 0) {
-            pokemon.battleStats[HPIndex] -= damage; 
-        }        
+        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);
+
+        if (damage > 0) pokemon.battleStats[HPIndex] -= damage; 
 
         document.querySelector("#dialogBox").innerHTML = attackdialog; 
         document.querySelector("#dialogBox").style.display = 'block';             
@@ -206,7 +205,7 @@ class Battle {
         }            
 
         //SE DESMAIOU
-        if (pokemon.battleStats[HPIndex] < 0) {
+        if (pokemon.battleStats[HPIndex] <= 0) {
             pokemon.battleStats[HPIndex] = 0;
             audio.attackHit.play();
             this.pokemonFainted = true;
@@ -238,13 +237,9 @@ class Battle {
         if (this.pokemonFainted) return;
        
         //SE CAUSOU DANO
-        if (pokemon.battleStats[HPIndex] > 0 && damage > 0)  {
+        if ((pokemon.battleStats[HPIndex] > 0) && (damage > 0)) {
             audio.attackHit.play();
             percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);
-            
-            // console.log(percentage);
-            // console.log(pokemon.battleStats[HPIndex]);
-            // console.log(pokemon.stats[HPIndex]);
 
             gsap.to(healthBarId, {
                 width: `${percentage}%`,
@@ -252,7 +247,7 @@ class Battle {
                 onComplete: () => {
                     document.querySelector("#dialogBox").style.display = 'none';
 
-                    if (!secondTime) {
+                    if (!secondTime) {                    
                         const randomMove = Math.floor(Math.random() * pokemonOposing.moves.moves.length);
                         this.changeColorHealthBar(pokemonFriend, percentage);
                         this.handleAttack(pokemonOposing, pokemonFriend, pokemonOposing.moves.moves[randomMove] , true, true);
@@ -307,9 +302,6 @@ class Battle {
             duration: 2
         });
 
-        // console.log(pokemonFainted);
-        // console.log(mapGeneral.pokemonTrainer.party.time[0]);       
-
         if (playVictorySound) {
             audio.battle.stop();
             audio.lowHpSound.stop();
@@ -322,6 +314,7 @@ class Battle {
                 duration: 3,
                 onComplete: () => {
                     mapGeneral.battle.initiaded = false;
+                    this.count++;
                     cancelAnimationFrame(animationBattleId);
                     document.querySelector('#battleInterface').style.display = "none";
                     mapGeneral.animate(); 
@@ -371,8 +364,6 @@ class Battle {
         damage = (move.power === null) ? 0 : Math.round((baseDamage / 50 + 2) * modifiers);   
        
         this.criticalHit = ((criticalDamage > 1) && (move.power > 0)) ? true : false;
-
-        // console.log("Dano causado" + damage);
 
         return damage;
     }
@@ -497,7 +488,7 @@ class Battle {
     }   
 
     playLowHPSound(color, percentage, pokemon){
-        if ((color = 'ec5042') && (percentage <= 25) && (pokemon !== mapGeneral.pokemonTrainer.party.time[0])) {
+        if ((color === "ec5042") && (percentage <= 25) && (pokemon !== mapGeneral.pokemonTrainer.party.time[0])) {
             audio.lowHpSound.play();
         }
     }
