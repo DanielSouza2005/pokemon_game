@@ -1,16 +1,17 @@
 let animationBattleId;
 
 class Battle {
-    constructor({image}){
+    constructor({image, pokemonFriend}){
         this.pokemonOposing = null;
         this.pokemonOposingSprite = null;
 
-        this.pokemonFriend = null;
+        this.pokemonFriend = pokemonFriend;
         this.pokemonFriendSprite = null;
 
         this.image = image;           
         this.initiaded = false;
         this.criticalHit = false;
+        this.pokemonFainted = false;
     }
 
     async startBattle() { 
@@ -36,7 +37,10 @@ class Battle {
             id: 133 //Eevee
         });
 
-        const front_spriteOposing = './images/front/' + pokemonOposing.id + '.png' //pokemonOposing.front_sprite;
+        const front_spriteOposing = this.returnSpritePath(pokemonOposing.id, 
+                                                          pokemonOposing.gender, 
+                                                          pokemonOposing.shiny,
+                                                         "Front");
 
         const pokemonOposingImage = new Image();
         pokemonOposingImage.src = front_spriteOposing;
@@ -54,12 +58,19 @@ class Battle {
     }
 
     async initializePokemonFriend() {
-        const pokemonFriend = await new Pokemon({
-            level: { number: 5 },
-            id: 25 //Pikachu
-        });
+        if (!this.pokemonFriend) {
+            const pokemonFriend = await new Pokemon({
+                level: { number: 5 },
+                id: 25 //Pikachu
+            });
 
-        const front_spriteFriend = './images/back/' + pokemonFriend.id + '.png';//pokemonFriend.back_sprite;
+            this.pokemonFriend = pokemonFriend; 
+        }
+        
+        const front_spriteFriend = this.returnSpritePath(this.pokemonFriend.id, 
+                                                         this.pokemonFriend.gender, 
+                                                         this.pokemonFriend.shiny,
+                                                         "Back"); 
 
         const pokemonFriendImage = new Image();
         pokemonFriendImage.src = front_spriteFriend;
@@ -71,9 +82,29 @@ class Battle {
             },
             image: pokemonFriendImage
         });
-
-        this.pokemonFriend = pokemonFriend; 
+        
         this.pokemonFriend.battleStats[0] = this.pokemonFriend.stats[0];
+    }
+
+    returnSpritePath(id, gender, shiny, front_back){
+        console.log(id);
+        console.log(gender);
+        console.log(shiny);
+        console.log(front_back);
+
+        let spritePath = "./images/";
+        let genderPath = (gender === "Male") ? "male/" : "female/";
+        let front_backPath = (front_back === "Front") ? "front/" : "back/"; 
+        let shinyPath = "shiny/";
+        let extension = ".png";
+
+        if (shiny) spritePath += shinyPath;
+
+        spritePath += front_backPath + genderPath + id + extension;        
+
+        console.log(spritePath);
+
+        return spritePath;
     }
 
     renderPokemonOposing() {
@@ -138,12 +169,13 @@ class Battle {
     handleAttack(pokemonFriend, pokemonOposing, move, isEnemy, secondTime){
         if (move === undefined) return;
 
+        const HPIndex = 0;   
         const healthBarId = isEnemy ? '#friendHealthBar' : '#enemyHealthBar';
         const remainingHPFriendId = document.getElementById("remainingHPFriend");
-        const pokemon = isEnemy ? pokemonFriend : pokemonOposing;
+        const pokemon = pokemonOposing;
+        // console.log(pokemon);
         const pokemonDialog = pokemonOposing ? pokemonFriend :  pokemonOposing;
-        const pokemonFainted = pokemonOposing ? pokemonOposing : pokemonFriend;
-        const HPIndex = 0;   
+        const pokemonFainted = pokemonOposing ? pokemonOposing : pokemonFriend;        
         const pokemonHP = pokemon.battleStats[HPIndex];        
 
         let damage = 0;
@@ -151,29 +183,33 @@ class Battle {
         let attackdialog = pokemonDialog.name + " usou " + move.name + "!";
         let dialog = pokemonFainted.name + " desmaiou!";        
 
-        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing);        
-        pokemon.battleStats[HPIndex] -= damage; 
+        damage = this.calculateDamage(move, pokemonFriend, pokemonOposing); 
+
+        if (damage > 0) {
+            pokemon.battleStats[HPIndex] -= damage; 
+        }        
 
         document.querySelector("#dialogBox").innerHTML = attackdialog; 
         document.querySelector("#dialogBox").style.display = 'block';             
         
-        gsap.to(document.querySelector("#dialogBox"), {
-            display: 'block',
-            opacity: 1,     
-            scale: 1,       
-            duration: 0.5,  
-            ease: "none", 
-            onComplete: () => {
-                if (this.criticalHit) {
+        if (this.criticalHit) {
+            gsap.to(document.querySelector("#dialogBox"), {
+                display: 'block',
+                opacity: 1,     
+                scale: 1,       
+                duration: 0.5,  
+                ease: "none", 
+                onComplete: () => {                
                     document.querySelector("#dialogBox").innerHTML = "Foi um ataque critico!";        
-                }                
-            }
-        });
+                }
+            });
+        }            
 
         //SE DESMAIOU
         if (pokemon.battleStats[HPIndex] < 0) {
             pokemon.battleStats[HPIndex] = 0;
             audio.attackHit.play();
+            this.pokemonFainted = true;
 
             if (secondTime) {
                 gsap.to({value: pokemonHP}, {
@@ -192,16 +228,23 @@ class Battle {
                 onComplete: () => {
                     document.querySelector("#dialogBox").innerHTML = dialog;        
                     this.handleFaint(pokemonFriend, pokemonOposing, pokemonDialog);
+                    this.changeColorHealthBar(pokemonFriend, percentage);
                 }
             }); 
             
             return;
         }   
-        
+
+        if (this.pokemonFainted) return;
+       
         //SE CAUSOU DANO
         if (pokemon.battleStats[HPIndex] > 0 && damage > 0)  {
             audio.attackHit.play();
-            percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);  
+            percentage = calculatePercentageDamage(pokemon.battleStats[HPIndex], pokemon.stats[HPIndex]);
+            
+            // console.log(percentage);
+            // console.log(pokemon.battleStats[HPIndex]);
+            // console.log(pokemon.stats[HPIndex]);
 
             gsap.to(healthBarId, {
                 width: `${percentage}%`,
@@ -211,10 +254,14 @@ class Battle {
 
                     if (!secondTime) {
                         const randomMove = Math.floor(Math.random() * pokemonOposing.moves.moves.length);
+                        this.changeColorHealthBar(pokemonFriend, percentage);
                         this.handleAttack(pokemonOposing, pokemonFriend, pokemonOposing.moves.moves[randomMove] , true, true);
+                        return;
                     }
                 }
             });  
+            
+            this.changeColorHealthBar(pokemonFriend, percentage);
 
             if (secondTime) {
                 gsap.to({value: pokemonHP}, {
@@ -225,7 +272,7 @@ class Battle {
                         remainingHPFriendId.innerHTML = Math.ceil(this.targets()[0].value);
                     }
                 });
-            }            
+            };            
         } 
         else {
             gsap.to(healthBarId, {
@@ -237,14 +284,18 @@ class Battle {
                     if (!secondTime) {
                         const randomMove = Math.floor(Math.random() * pokemonOposing.moves.moves.length);
                         this.handleAttack(pokemonOposing, pokemonFriend, pokemonOposing.moves.moves[randomMove] , true, true);
+                        return;
                     }
                 }
             }); 
         }      
     }
 
-    handleFaint(pokemon){        
+    handleFaint(pokemon){     
+        const pokemonFainted = (pokemon === this.pokemonFriend) ? this.pokemonOposing : this.pokemonFriend;
         const pokemonFaintedSprite = (pokemon === this.pokemonFriend) ? this.pokemonOposingSprite : this.pokemonFriendSprite;
+        const playVictorySound = (pokemonFainted === mapGeneral.pokemonTrainer.party.time[0]) ? false : true;
+        document.querySelector("#dialogBox").style.display = 'block';
 
         gsap.to(pokemonFaintedSprite.position, {
             y: pokemonFaintedSprite.position.y + 20,
@@ -256,14 +307,21 @@ class Battle {
             duration: 2
         });
 
-        audio.battle.stop();
-        audio.battleVictory.play();
+        // console.log(pokemonFainted);
+        // console.log(mapGeneral.pokemonTrainer.party.time[0]);       
+
+        if (playVictorySound) {
+            audio.battle.stop();
+            audio.lowHpSound.stop();
+            audio.battleVictory.play();
+        }        
 
         setTimeout(() => {                             
             gsap.to('#overlappingDiv', {
                 opacity: 1,
                 duration: 3,
                 onComplete: () => {
+                    mapGeneral.battle.initiaded = false;
                     cancelAnimationFrame(animationBattleId);
                     document.querySelector('#battleInterface').style.display = "none";
                     mapGeneral.animate(); 
@@ -272,17 +330,20 @@ class Battle {
                         opacity: 0
                     });
 
-                    audio.battleVictory.stop();                    
-                    audio.map.play();
-    
-                    mapGeneral.battle.initiaded = false;
+                    if (playVictorySound){
+                        audio.battleVictory.stop();                    
+                    }
+
+                    audio.lowHpSound.stop();
+                    audio.battle.stop();
+                    audio.map.play();                      
                 }
             });      
         }, 3000);               
     }
 
     calculateDamage(move, pokemonFriend, pokemonAffected){
-        if (!move || typeof move.type !== "string" || typeof move.power !== "number") {
+        if (!move || typeof move.power !== "number" || move.power <= 0) {
             return 0;
         }
 
@@ -299,7 +360,7 @@ class Battle {
         physicalSpecial = this.returnPhysicalSpecialMove(move.type);
         ({ attack, defense } = this.returnAttackDefense(physicalSpecial, pokemonFriend, pokemonAffected));
         STAB = this.returnSTABMove(move, pokemonFriend);
-        criticalDamage = this.returnCriticalHit();
+        criticalDamage = this.returnCriticalHit(move);
         random = this.returnRowRatio();
         type1Effectiveness = this.returnTypeEffectiveness(move.type, pokemonAffected.type1);
         type2Effectiveness = this.returnTypeEffectiveness(move.type, pokemonAffected.type2);
@@ -308,8 +369,10 @@ class Battle {
         let modifiers = criticalDamage * STAB * random * type1Effectiveness * type2Effectiveness;
 
         damage = (move.power === null) ? 0 : Math.round((baseDamage / 50 + 2) * modifiers);   
-        
-        this.criticalHit = (criticalDamage > 1) ? true : false;
+       
+        this.criticalHit = ((criticalDamage > 1) && (move.power > 0)) ? true : false;
+
+        // console.log("Dano causado" + damage);
 
         return damage;
     }
@@ -336,8 +399,8 @@ class Battle {
         }
     }  
 
-    returnCriticalHit(){
-        if (getRandomInt(0, 24) === 0) {
+    returnCriticalHit(move){
+        if ((getRandomInt(0, 24) === 0) && (move.power > 0)) {
             return 2;  
         } 
         else {
@@ -414,4 +477,28 @@ class Battle {
         return effectiveness;
     }
 
+    deduceColorHealthBar(percentage){
+        switch (true) { 
+            case percentage > 50:
+                return '#7cedba';
+            case percentage > 25:
+                return '#F5EB60';
+            default:
+                return '#ec5042';
+        }
+    }
+
+    changeColorHealthBar(pokemon, percentage){
+        let color = this.deduceColorHealthBar(percentage);
+        const healthBarId = (pokemon === mapGeneral.pokemonTrainer.party.time[0]) ? '#enemyHealthBar' : '#friendHealthBar';
+        document.querySelector(healthBarId).style.backgroundColor = color;
+
+        this.playLowHPSound(color, percentage, pokemon); 
+    }   
+
+    playLowHPSound(color, percentage, pokemon){
+        if ((color = 'ec5042') && (percentage <= 25) && (pokemon !== mapGeneral.pokemonTrainer.party.time[0])) {
+            audio.lowHpSound.play();
+        }
+    }
 }

@@ -76,7 +76,14 @@ const player = new Sprite({
         left: playerLeftImage,
         right: playerRightImage
     }
-})
+});
+
+let trainer = new PokemonTrainer('Red', player);
+
+trainer.party.addPokemonAsync({
+    level: { number: 5 },
+    id: 25 //Pikachu
+});
 
 const background = new Sprite({
     position: {
@@ -102,7 +109,10 @@ const battleBackground = new Sprite({
     image : battleBackgroundImage
 });
 
-const battle = new Battle({image: battleBackground});
+const battle = new Battle({
+    image: battleBackground, 
+    pokemonFriend: trainer.party.time[0]                     
+});
 
 const collisionsMap = [];
 for (let i = 0; i < collisions.length; i += 70){
@@ -149,7 +159,8 @@ const movables = [background, ...boundaries, foreground, ...battleZones];
 const mapGeneral = new Map({
     background: background,
     boundaries: boundaries,
-    player: player,
+    player: trainer.sprite,
+    trainer: trainer,
     foreground: foreground,
     battleZones: battleZones,
     battle: battle

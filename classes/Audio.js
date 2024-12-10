@@ -18,4 +18,8 @@ const audio = {
         src: './audio/battleVictory.mp3',
         html5: true
     }),
+    lowHpSound: new Howl({
+        src: './audio/lowHpSound.mp3',
+        html5: true
+    })
 }

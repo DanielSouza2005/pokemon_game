@@ -2,12 +2,14 @@ class Map{
     constructor({background, 
                  boundaries,
                  player, 
+                 trainer,
                  foreground,
                  battleZones,
                  battle}){
         this.background       = background;
         this.boundaries       = boundaries;
-        this.player           = player;
+        this.playerSprite     = player;
+        this.pokemonTrainer   = trainer;
         this.foreground       = foreground; 
         this.battleZones      = battleZones;
         this.battle           = battle;
@@ -17,6 +19,10 @@ class Map{
 
     animate = () => {
         document.querySelector('#battleInterface').style.display = "none";
+
+        if (!this.battle.pokemonFriend){
+            this.battle.pokemonFriend = this.pokemonTrainer.party.time[0];
+        }        
 
         const animationId = window.requestAnimationFrame(this.animate); 
 
@@ -30,11 +36,11 @@ class Map{
             battleZone.draw(); 
         });
 
-        this.player.draw();    
+        this.playerSprite.draw();    
         this.foreground.draw(); 
 
         this.moving = true;
-        this.player.moving = false;      
+        this.playerSprite.moving = false;      
 
         if (this.battle.initiaded) return;
 
@@ -42,14 +48,14 @@ class Map{
             for(let i = 0; i < this.battleZones.length; i++){
     
                 const battleZone = this.battleZones[i];
-                const overlappingArea = returnOverlappingArea(this.player, battleZone);
+                const overlappingArea = returnOverlappingArea(this.playerSprite, battleZone);
     
                 if (
                     (rectangularCollision({
-                        rectangle1: this.player,
+                        rectangle1: this.playerSprite,
                         rectangle2: battleZone
                     })) && 
-                    (overlappingArea > (this.player.width * this.player.height / 2)) &&
+                    (overlappingArea > (this.playerSprite.width * this.playerSprite.height / 2)) &&
                     (Math.random() < 0.01)
                 ) {
                     window.cancelAnimationFrame(animationId);
@@ -58,6 +64,7 @@ class Map{
                     audio.battle.play();
 
                     this.battle.initiaded = true;
+                    this.battle.pokemonFainted = false;
     
                     //transition
                     gsap.to('#overlappingDiv', {
@@ -71,6 +78,11 @@ class Map{
                                 duration: 0.5,
                                 onComplete: () => {
                                     document.querySelector('#battleInterface').style.display = "block";
+                                    document.querySelector("#attackSelection").style.display = 'grid';
+
+                                    document.querySelector('#enemyHealthBar').style.backgroundColor = '#7cedba';
+                                    document.querySelector('#friendHealthBar').style.backgroundColor = '#7cedba';
+
                                     this.battle.startBattle();
     
                                     gsap.to('#overlappingDiv', {
@@ -88,15 +100,15 @@ class Map{
         }
 
         if (keyEvents.keys.w.pressed && keyEvents.lastKey === 'w') {
-            this.player.moving = true;
-            this.player.image = this.player.sprites.up;
+            this.playerSprite.moving = true;
+            this.playerSprite.image = this.playerSprite.sprites.up;
     
             for(let i = 0; i < this.boundaries.length; i++){
     
                 const boundary = this.boundaries[i];
                 if (
                     rectangularCollision({
-                        rectangle1: this.player,
+                        rectangle1: this.playerSprite,
                         rectangle2: {
                             ...boundary, 
                             position: {
@@ -117,15 +129,15 @@ class Map{
             }        
         }  
         else if (keyEvents.keys.a.pressed && keyEvents.lastKey === 'a') {
-            this.player.moving = true;
-            this.player.image = this.player.sprites.left;
+            this.playerSprite.moving = true;
+            this.playerSprite.image = this.playerSprite.sprites.left;
     
             for(let i = 0; i < this.boundaries.length; i++){
     
                 const boundary = this.boundaries[i];
                 if (
                     rectangularCollision({
-                        rectangle1: this.player,
+                        rectangle1: this.playerSprite,
                         rectangle2: {
                             ...boundary, 
                             position: {
@@ -146,15 +158,15 @@ class Map{
             }
         } 
         else if (keyEvents.keys.s.pressed && keyEvents.lastKey === 's') {
-            this.player.moving = true;
-            this.player.image = this.player.sprites.down;
+            this.playerSprite.moving = true;
+            this.playerSprite.image = this.playerSprite.sprites.down;
     
             for(let i = 0; i < this.boundaries.length; i++){
     
                 const boundary = this.boundaries[i];
                 if (
                     rectangularCollision({
-                        rectangle1: this.player,
+                        rectangle1: this.playerSprite,
                         rectangle2: {
                             ...boundary, 
                             position: {
@@ -176,15 +188,15 @@ class Map{
             
         } 
         else if (keyEvents.keys.d.pressed && keyEvents.lastKey === 'd') {
-            this.player.moving = true;
-            this.player.image = player.sprites.right;
+            this.playerSprite.moving = true;
+            this.playerSprite.image = this.playerSprite.sprites.right;
     
             for(let i = 0; i < this.boundaries.length; i++){
     
                 const boundary = this.boundaries[i];
                 if (
                     rectangularCollision({
-                        rectangle1: this.player,
+                        rectangle1: this.playerSprite,
                         rectangle2: {
                             ...boundary, 
                             position: {

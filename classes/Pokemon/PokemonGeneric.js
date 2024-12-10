@@ -2,7 +2,6 @@ let pokemonProperties = {};
 
 class Pokemon {
     constructor(pokemon){
-        // super();
         return this.initializePokemon(pokemon);  
     }
 
@@ -157,16 +156,6 @@ class Pokemon {
         else {
             this.gender = "Unknown";
         }  
-
-        // if(gender === "Male"){
-        //     this.gender = "Male";
-        // }
-        // else if (gender === "Female"){
-        //     this.gender = "Female";
-        // }
-        // else {
-        //     this.gender = "Unknown";
-        // }   
     }
 
     defineShinyGeneric(shiny){
@@ -184,11 +173,9 @@ class Pokemon {
             this.level = level.number;
         } 
         else {
-            // Use the provided range or default to 1-50
             const minRange = level.range && level.range[0] !== undefined ? level.range[0] : 1;
             const maxRange = level.range && level.range[1] !== undefined ? level.range[1] : 100;
 
-            // Generate a random level within the specified range
             this.level = getRandomInt(minRange, maxRange);
         }
     }
