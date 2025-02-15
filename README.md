@@ -15,5 +15,6 @@
 <h2>🛠️ Project Features </h2>
 
 - 👾 `Sprites`: Sprites and Map were made with Tiled.
+- 🧩 `Data`: All pokémon data is fecthed by PokéAPI.
 - 🎞️ `Animations`: Every animation was made with GSAP.
 - ⚔️ `Battle`: It is possible to battle a wild Eevee, with damage calculation implemented.
